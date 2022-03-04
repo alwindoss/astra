@@ -1,0 +1,37 @@
+{{template "base" .}}
+
+{{define "css"}}
+<style>
+    .bucket-table {
+        margin-top: 30px;
+    }
+    .bucket-home {
+        margin-top: 30px;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="container">
+    <div class="bucket-home">
+        <a href="/create-bucket" class="btn btn-success">Create Bucket</a>
+        <table class="table table-bordered bucket-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Bucket Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $index, $element := .StringSlice}}
+                <tr>
+                    <th scope="row">{{inc $index}}</th>
+                    <td>{{$element}}</td>
+                </tr>
+                
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}
