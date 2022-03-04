@@ -1,5 +1,9 @@
 # Astra
-Simple Web UI for boltdb
+Simple Web UI for boltdb.
+Astra is built using Go's [embed](https://pkg.go.dev/embed) package.
+This enables Astra to run as a single binary.
+
+Follow the instructions to install the app and enjoy exploring the boltdb.
 
 
 ## Installation
