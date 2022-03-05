@@ -8,6 +8,10 @@
     .bucket-home {
         margin-top: 30px;
     }
+    .bucket-action-icons {
+        display: flex;
+        justify-content: space-evenly;
+    }
 </style>
 {{end}}
 
@@ -20,6 +24,7 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Bucket Name</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,6 +32,16 @@
                 <tr>
                     <th scope="row">{{inc $index}}</th>
                     <td>{{$element}}</td>
+                    <td>
+                        <div class="bucket-action-icons">
+                            <a href="/view-bucket?bucket_name={{$element}}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/delete-bucket?bucket_name={{$element}}">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 
             {{end}}

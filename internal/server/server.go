@@ -62,6 +62,8 @@ func createRoutes(cfg *astra.Config, sess *scs.SessionManager, service dbase.Ser
 	router.Get("/bucket", hdlrs.RenderBucketPage)
 	router.Post("/bucket", hdlrs.CreateBucketHandler)
 	router.Get("/create-bucket", hdlrs.RenderCreateBucketPage)
+	router.Get("/view-bucket", hdlrs.ViewBucketHandler)
+	router.Get("/delete-bucket", hdlrs.DeleteBucketHandler)
 	// router.Get("/about", handlers.About)
 	// router.Get("/generals-quarters", handlers.Generals)
 	// router.Get("/majors-suite", handlers.Majors)
