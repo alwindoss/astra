@@ -17,3 +17,9 @@ Follow the instructions to install the app and enjoy exploring the boltdb.
 #### To run the installed version of **Astra** assuming your $GOBIN is added to the $PATH environment variable
 
 Run `astra` from anywhere in the terminal
+
+#### If you want to view and manage your boltdb using **Astra** then using the flags as shown below
+
+Run `astra -loc=/tmp/astra -name=dummy.db`
+
+Run `astra -h` to see the options

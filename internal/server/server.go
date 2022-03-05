@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -30,11 +31,13 @@ func Run(cfg *astra.Config) {
 	session.Cookie.SameSite = http.SameSiteLaxMode
 	session.Cookie.Secure = cfg.InProduction
 
-	db, err := bbolt.Open(cfg.Location+"astra.db", 0600, nil)
+	dbLoc := filepath.Join(cfg.Location, cfg.DBName)
+	db, err := bbolt.Open(dbLoc, 0600, nil)
 	if err != nil {
 		log.Printf("unable to open the astra db: %v", err)
 		os.Exit(1)
 	}
+	log.Printf("Opened DB at location %s", dbLoc)
 	defer db.Close()
 
 	repo := dbase.NewBoltDBRepository(db)
