@@ -67,6 +67,9 @@ func createRoutes(cfg *astra.Config, sess *scs.SessionManager, service service.S
 	router.Get("/delete-bucket", hdlrs.DeleteBucketHandler)
 	router.Get("/add-item", hdlrs.RenderAddItemPage)
 	router.Post("/add-item", hdlrs.AddItemHandler)
+	router.Get("/view-item", hdlrs.RenderViewItemPage)
+	router.Get("/delete-item", hdlrs.DeleteItemHandler)
+
 	// router.Get("/about", handlers.About)
 	// router.Get("/generals-quarters", handlers.Generals)
 	// router.Get("/majors-suite", handlers.Majors)

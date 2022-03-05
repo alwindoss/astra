@@ -18,6 +18,7 @@ type Repository interface {
 	GetAllData(name []byte) ([]KeyValuePair, error)
 	Get(bucket, key []byte) ([]byte, error)
 	Set(bucket, key, value []byte) error
+	Delete(bucket, key []byte) error
 }
 
 func NewBoltDBRepository(db *bbolt.DB) Repository {
@@ -150,4 +151,16 @@ func (d *boltDBRepository) GetAllData(bucket []byte) ([]KeyValuePair, error) {
 	}
 
 	return kvPairs, nil
+}
+
+func (d *boltDBRepository) Delete(bucket, key []byte) error {
+	d.DB.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucket)
+		err := b.Delete(key)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return nil
 }

@@ -1,0 +1,46 @@
+{{template "base" .}}
+
+{{define "css"}}
+<style>
+    .bucket-table {
+        margin-top: 30px;
+    }
+    .bucket-home {
+        margin-top: 30px;
+    }
+    .bucket-action-icons {
+        display: flex;
+        justify-content: space-evenly;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+
+{{$res := index .Data "item_details"}}
+{{$bucketName := index .Data "bucket_name"}}
+<div class="container">
+    <div class="bucket-home">
+        <a href="/view-bucket?bucket_name={{$bucketName}}" class="btn btn-success">Go Back</a>
+        <table class="table table-bordered bucket-table">
+            <thead>
+                <tr>
+                    <!-- <th scope="col">#</th> -->
+                    <th scope="col">Bucket</th>
+                    <th scope="col">Key</th>
+                    <th scope="col">Value</th>
+                    <!-- <th scope="col">Actions</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{$bucketName}}</td>
+                    <td>{{$res.Key}}</td>
+                    <td>{{$res.Value}}</td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

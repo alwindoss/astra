@@ -18,8 +18,9 @@ type Service interface {
 	DeleteBucket(name string) error
 	GetBuckets() ([]string, error)
 	GetAllData(bucket string) (interface{}, error)
-	Get(bucket, key string) (interface{}, error)
+	Get(bucket, key string) (string, error)
 	Set(bucket, key string, value interface{}) error
+	Delete(bucket, key string) error
 }
 
 func NewService(repo dbase.Repository) Service {
@@ -53,14 +54,14 @@ func (s *boltDBService) GetBuckets() ([]string, error) {
 	return buckets, nil
 }
 
-func (s *boltDBService) Get(bucket, key string) (interface{}, error) {
+func (s *boltDBService) Get(bucket, key string) (string, error) {
 	value, err := s.Repo.Get([]byte(bucket), []byte(key))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	var data interface{}
+	var data string
 	json.Unmarshal(value, &data)
-	return &data, nil
+	return data, nil
 }
 
 func (s *boltDBService) Set(bucket, key string, value interface{}) error {
@@ -90,4 +91,12 @@ func (s *boltDBService) GetAllData(bucket string) (interface{}, error) {
 
 	}
 	return svcKVPairs, nil
+}
+
+func (s *boltDBService) Delete(bucket, key string) error {
+	err := s.Repo.Delete([]byte(bucket), []byte(key))
+	if err != nil {
+		return err
+	}
+	return nil
 }

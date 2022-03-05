@@ -41,10 +41,10 @@
                     <!-- <td>{{marshal $val.Value}}</td> -->
                     <td>
                         <div class="bucket-action-icons">
-                            <a href="/view-item?key={{$val.Key}},val={{$val.Value}}">
+                            <a href="/view-item?bucket_name={{$bucketName}}&key={{$val.Key}}">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="/delete-item?key={{$val.Key}}">
+                            <a href="/delete-item?bucket_name={{$bucketName}}&key={{$val.Key}}">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>

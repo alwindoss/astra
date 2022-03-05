@@ -20,6 +20,8 @@ type PageHandler interface {
 	DeleteBucketHandler(w http.ResponseWriter, r *http.Request)
 	AddItemHandler(w http.ResponseWriter, r *http.Request)
 	RenderAddItemPage(w http.ResponseWriter, r *http.Request)
+	RenderViewItemPage(w http.ResponseWriter, r *http.Request)
+	DeleteItemHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func NewPageHandler(cfg *astra.Config, session *scs.SessionManager, service service.Service) PageHandler {
@@ -244,4 +246,59 @@ func (h *pageHandler) RenderAddItemPage(w http.ResponseWriter, r *http.Request) 
 		Data:  data,
 	}
 	renderTemplate(w, r, h.Cfg, "add-item.page.tmpl", d)
+}
+
+func (h *pageHandler) RenderViewItemPage(w http.ResponseWriter, r *http.Request) {
+	// remoteIP := r.RemoteAddr
+
+	// h.SessMgr.Put(r.Context(), "remote-ip", remoteIP)
+	bucketName := r.FormValue("bucket_name")
+	key := r.FormValue("key")
+	val, err := h.Svc.Get(bucketName, key)
+	if err != nil {
+		h.SessMgr.Put(r.Context(), "error", "unable to get the value from the bucket")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	log.Printf("Bucket Name in the RenderViewItemPage is: %s", bucketName)
+	log.Printf("Key in the RenderViewItemPage is: %s", key)
+	log.Printf("Val in the RenderViewItemPage is: %s", val)
+	itemDetails := kvPair{
+		Key:   key,
+		Value: val,
+	}
+	data := make(map[string]interface{})
+	data["bucket_name"] = bucketName
+	data["item_details"] = itemDetails
+
+	d := &TemplateData{
+		Title: "View Item",
+		Form:  forms.New(nil),
+		Data:  data,
+	}
+	renderTemplate(w, r, h.Cfg, "view-item.page.tmpl", d)
+}
+
+func (h *pageHandler) DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
+	bucketName := r.FormValue("bucket_name")
+	key := r.FormValue("key")
+	err := h.Svc.Delete(bucketName, key)
+	if err != nil {
+		h.SessMgr.Put(r.Context(), "error", "unable to delete the item from the bucket")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	log.Printf("Bucket Name in the DeleteItemHandler is: %s", bucketName)
+	log.Printf("Key in the DeleteItemHandler is: %s", key)
+
+	// h.SessMgr.Put(r.Context(), "remote-ip", remoteIP)
+
+	// d := &TemplateData{
+	// 	Title: "View Bucket",
+	// 	Form:  forms.New(nil),
+	// 	Data:  data,
+	// }
+	http.Redirect(w, r, "/view-bucket?bucket_name="+bucketName, http.StatusSeeOther)
+	// renderTemplate(w, r, h.Cfg, "view-bucket.page.tmpl", d)
 }
