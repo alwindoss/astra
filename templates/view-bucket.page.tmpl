@@ -1,0 +1,59 @@
+{{template "base" .}}
+
+{{define "css"}}
+<style>
+    .bucket-table {
+        margin-top: 30px;
+    }
+    .bucket-home {
+        margin-top: 30px;
+    }
+    .bucket-action-icons {
+        display: flex;
+        justify-content: space-evenly;
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+
+{{$res := index .Data "kv_list"}}
+{{$bucketName := index .Data "bucket_name"}}
+<div class="container">
+    <div class="bucket-home">
+        <a href="/add-item?bucket_name={{$bucketName}}" class="btn btn-success">Add Item</a>
+        <table class="table table-bordered bucket-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Key</th>
+                    <th scope="col">Value</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- {{$index := 0}} -->
+                {{range $index, $val := $res}}
+                <tr>
+                    <th scope="row">{{inc $index}}</th>
+                    <td>{{$val.Key}}</td>
+                    <td>{{$val.Value}}</td>
+                    <!-- <td>{{marshal $val.Value}}</td> -->
+                    <td>
+                        <div class="bucket-action-icons">
+                            <a href="/view-item?key={{$val.Key}},val={{$val.Value}}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/delete-item?key={{$val.Key}}">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

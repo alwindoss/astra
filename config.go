@@ -1,10 +1,10 @@
 package astra
 
 import (
+	"html/template"
 	"log"
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/mitchellh/go-homedir"
 )

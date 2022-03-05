@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/alwindoss/astra"
-	"github.com/alwindoss/astra/internal/dbase"
 	"github.com/alwindoss/astra/internal/forms"
+	"github.com/alwindoss/astra/internal/service"
 )
 
 type PageHandler interface {
@@ -17,9 +18,11 @@ type PageHandler interface {
 	CreateBucketHandler(w http.ResponseWriter, r *http.Request)
 	ViewBucketHandler(w http.ResponseWriter, r *http.Request)
 	DeleteBucketHandler(w http.ResponseWriter, r *http.Request)
+	AddItemHandler(w http.ResponseWriter, r *http.Request)
+	RenderAddItemPage(w http.ResponseWriter, r *http.Request)
 }
 
-func NewPageHandler(cfg *astra.Config, session *scs.SessionManager, service dbase.Service) PageHandler {
+func NewPageHandler(cfg *astra.Config, session *scs.SessionManager, service service.Service) PageHandler {
 	return &pageHandler{
 		Cfg:     cfg,
 		SessMgr: session,
@@ -30,7 +33,7 @@ func NewPageHandler(cfg *astra.Config, session *scs.SessionManager, service dbas
 type pageHandler struct {
 	Cfg     *astra.Config
 	SessMgr *scs.SessionManager
-	Svc     dbase.Service
+	Svc     service.Service
 }
 
 func (h *pageHandler) RenderHomePage(w http.ResponseWriter, r *http.Request) {
@@ -121,8 +124,39 @@ func (h *pageHandler) CreateBucketHandler(w http.ResponseWriter, r *http.Request
 	// renderTemplate(w, r, h.Cfg, "bucket.page.tmpl", d)
 }
 
-func (h *pageHandler) ViewBucketHandler(w http.ResponseWriter, r *http.Request) {
+type kvPair struct {
+	Key   string
+	Value string
+}
 
+func (h *pageHandler) ViewBucketHandler(w http.ResponseWriter, r *http.Request) {
+	bucketName := r.FormValue("bucket_name")
+	log.Printf("Fetching value for the bucket: %s", bucketName)
+	data, err := h.Svc.GetAllData(bucketName)
+	if err != nil {
+		return
+	}
+	var svcKVPairs []service.KeyValuePair
+	var allKV []kvPair
+	ok := false
+	if svcKVPairs, ok = data.([]service.KeyValuePair); !ok {
+		return
+	}
+	log.Printf("Count of key value pairs returned: %d", len(svcKVPairs))
+	for _, svcKVPair := range svcKVPairs {
+		kv := kvPair{
+			Key:   svcKVPair.Key,
+			Value: svcKVPair.Value,
+		}
+		allKV = append(allKV, kv)
+	}
+	respData := make(map[string]interface{})
+	respData["kv_list"] = allKV
+	respData["bucket_name"] = bucketName
+	td := &TemplateData{
+		Data: respData,
+	}
+	renderTemplate(w, r, h.Cfg, "view-bucket.page.tmpl", td)
 }
 
 func (h *pageHandler) DeleteBucketHandler(w http.ResponseWriter, r *http.Request) {
@@ -135,4 +169,79 @@ func (h *pageHandler) DeleteBucketHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	http.Redirect(w, r, "/bucket", http.StatusSeeOther)
+}
+
+func (h *pageHandler) AddItemHandler(w http.ResponseWriter, r *http.Request) {
+	bucketName := r.FormValue("bucket_name")
+	key := r.FormValue("key")
+	val := r.FormValue("val")
+	log.Printf("Bucket Name in the AddItemHandler is: %s", bucketName)
+	log.Printf("Key in the AddItemHandler is: %s", key)
+	log.Printf("Val in the AddItemHandler is: %s", val)
+	itemDls := kvPair{
+		Key:   key,
+		Value: val,
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("key")
+	form.Required("val")
+	form.Required("bucket_name")
+	form.MaxLength("key", 30)
+	data := make(map[string]interface{})
+	data["item_details"] = itemDls
+	data["bucket_name"] = bucketName
+	if !form.Valid() {
+
+		// add these lines to fix bad data error
+		// stringMap := make(map[string]string)
+		// stringMap["end_date"] = ed
+		renderTemplate(w, r, h.Cfg, "add-item.page.tmpl", &TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+	err := h.Svc.Set(bucketName, key, val)
+	if err != nil {
+		h.SessMgr.Put(r.Context(), "error", "cannot create an item in the bucket")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	// h.SessMgr.Put(r.Context(), "remote-ip", remoteIP)
+
+	// d := &TemplateData{
+	// 	Title: "View Bucket",
+	// 	Form:  forms.New(nil),
+	// 	Data:  data,
+	// }
+	http.Redirect(w, r, "/view-bucket?bucket_name="+bucketName, http.StatusSeeOther)
+	// renderTemplate(w, r, h.Cfg, "view-bucket.page.tmpl", d)
+}
+
+func (h *pageHandler) RenderAddItemPage(w http.ResponseWriter, r *http.Request) {
+	// remoteIP := r.RemoteAddr
+
+	// h.SessMgr.Put(r.Context(), "remote-ip", remoteIP)
+	bucketName := r.FormValue("bucket_name")
+	key := r.FormValue("key")
+	val := r.FormValue("val")
+	log.Printf("Bucket Name in the RenderAddItemPage is: %s", bucketName)
+	log.Printf("Key in the RenderAddItemPage is: %s", key)
+	log.Printf("Val in the RenderAddItemPage is: %s", val)
+	itemDetails := kvPair{
+		Key:   key,
+		Value: val,
+	}
+	data := make(map[string]interface{})
+	data["bucket_name"] = bucketName
+	data["item_details"] = itemDetails
+
+	d := &TemplateData{
+		Title: "Add Item",
+		Form:  forms.New(nil),
+		Data:  data,
+	}
+	renderTemplate(w, r, h.Cfg, "add-item.page.tmpl", d)
 }

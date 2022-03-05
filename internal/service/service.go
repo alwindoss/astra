@@ -1,26 +1,35 @@
-package dbase
+package service
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+
+	"github.com/alwindoss/astra/internal/dbase"
 )
+
+type KeyValuePair struct {
+	Key   string
+	Value string
+}
 
 type Service interface {
 	CreateBucket(name string) error
 	DeleteBucket(name string) error
 	GetBuckets() ([]string, error)
+	GetAllData(bucket string) (interface{}, error)
 	Get(bucket, key string) (interface{}, error)
 	Set(bucket, key string, value interface{}) error
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo dbase.Repository) Service {
 	return &boltDBService{
 		Repo: repo,
 	}
 }
 
 type boltDBService struct {
-	Repo Repository
+	Repo dbase.Repository
 }
 
 func (s *boltDBService) CreateBucket(name string) error {
@@ -61,4 +70,24 @@ func (s *boltDBService) Set(bucket, key string, value interface{}) error {
 		return err
 	}
 	return s.Repo.Set([]byte(bucket), []byte(key), data)
+}
+
+func (s *boltDBService) GetAllData(bucket string) (interface{}, error) {
+	dbKVPairs, err := s.Repo.GetAllData([]byte(bucket))
+	if err != nil {
+		return nil, err
+	}
+	svcKVPairs := []KeyValuePair{}
+	for _, dbKVPair := range dbKVPairs {
+		var valStr string
+		log.Printf("Alwin: %s", valStr)
+		json.Unmarshal(dbKVPair.Value, &valStr)
+		svcKVPair := KeyValuePair{
+			Key:   string(dbKVPair.Key),
+			Value: valStr,
+		}
+		svcKVPairs = append(svcKVPairs, svcKVPair)
+
+	}
+	return svcKVPairs, nil
 }

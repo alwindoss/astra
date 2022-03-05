@@ -6,10 +6,16 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+type KeyValuePair struct {
+	Key   []byte
+	Value []byte
+}
+
 type Repository interface {
 	CreateBucket(name []byte) error
 	FetchBuckets() ([][]byte, error)
 	DeleteBucket(name []byte) error
+	GetAllData(name []byte) ([]KeyValuePair, error)
 	Get(bucket, key []byte) ([]byte, error)
 	Set(bucket, key, value []byte) error
 }
@@ -84,7 +90,7 @@ func (d *boltDBRepository) FetchBuckets() ([][]byte, error) {
 
 func (d *boltDBRepository) Get(bucket, key []byte) ([]byte, error) {
 	if bucket == nil {
-		return nil, fmt.Errorf("Bucket name %s is not valid", bucket)
+		return nil, fmt.Errorf("bucket name %s is not valid", bucket)
 	}
 	var val []byte
 	err := d.DB.View(func(tx *bbolt.Tx) error {
@@ -105,7 +111,7 @@ func (d *boltDBRepository) Get(bucket, key []byte) ([]byte, error) {
 
 func (d *boltDBRepository) Set(bucket, key, value []byte) error {
 	if bucket == nil {
-		return fmt.Errorf("Bucket name %s is not valid", bucket)
+		return fmt.Errorf("bucket name %s is not valid", bucket)
 	}
 	err := d.DB.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
@@ -120,4 +126,28 @@ func (d *boltDBRepository) Set(bucket, key, value []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (d *boltDBRepository) GetAllData(bucket []byte) ([]KeyValuePair, error) {
+	if bucket == nil {
+		return nil, fmt.Errorf("bucket name %s is not valid", bucket)
+	}
+	kvPairs := []KeyValuePair{}
+	err := d.DB.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucket)
+		b.ForEach(func(k, v []byte) error {
+			kvPairs = append(kvPairs, KeyValuePair{
+				Key:   k,
+				Value: v,
+			})
+			return nil
+		})
+		return nil
+	})
+	if err != nil {
+		err = fmt.Errorf("unable to get all data for the bucket %s: %w", bucket, err)
+		return nil, err
+	}
+
+	return kvPairs, nil
 }

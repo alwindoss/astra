@@ -10,6 +10,7 @@ import (
 	"github.com/alwindoss/astra"
 	"github.com/alwindoss/astra/internal/dbase"
 	"github.com/alwindoss/astra/internal/handlers"
+	"github.com/alwindoss/astra/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.etcd.io/bbolt"
@@ -37,14 +38,14 @@ func Run(cfg *astra.Config) {
 	defer db.Close()
 
 	repo := dbase.NewBoltDBRepository(db)
-	service := dbase.NewService(repo)
+	service := service.NewService(repo)
 
 	router := createRoutes(cfg, session, service)
 	log.Printf("Running Astra server on port %s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, router))
 }
 
-func createRoutes(cfg *astra.Config, sess *scs.SessionManager, service dbase.Service) http.Handler {
+func createRoutes(cfg *astra.Config, sess *scs.SessionManager, service service.Service) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.Heartbeat("/ping"))
 	n := handlers.NoSurf{
@@ -64,6 +65,8 @@ func createRoutes(cfg *astra.Config, sess *scs.SessionManager, service dbase.Ser
 	router.Get("/create-bucket", hdlrs.RenderCreateBucketPage)
 	router.Get("/view-bucket", hdlrs.ViewBucketHandler)
 	router.Get("/delete-bucket", hdlrs.DeleteBucketHandler)
+	router.Get("/add-item", hdlrs.RenderAddItemPage)
+	router.Post("/add-item", hdlrs.AddItemHandler)
 	// router.Get("/about", handlers.About)
 	// router.Get("/generals-quarters", handlers.Generals)
 	// router.Get("/majors-suite", handlers.Majors)

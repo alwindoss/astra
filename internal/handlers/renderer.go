@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"path/filepath"
-	"text/template"
 
 	"github.com/alwindoss/astra"
 	"github.com/alwindoss/astra/internal/forms"
@@ -61,6 +62,10 @@ var functions = template.FuncMap{
 	// The name "inc" is what the function will be called in the template text.
 	"inc": func(i int) int {
 		return i + 1
+	},
+	"marshal": func(v interface{}) template.JS {
+		a, _ := json.Marshal(v)
+		return template.JS(a)
 	},
 }
 
